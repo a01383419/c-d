@@ -1,30 +1,40 @@
 import streamlit as st
-import tensorflow as tf
-import numpy as np
+import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from torchvision import models
 from PIL import Image
 
-@st.cache_resource
+transform = transforms.Compose([
+    transforms.Resize((160, 160)),
+    transforms.ToTensor(),
+])
+
+@st.cache(allow_output_mutation=True)
 def load_model():
-    model = tf.keras.models.load_model('cats_vs_dogs_model.keras', compile=False)
+    model = models.mobilenet_v2(pretrained=True)
+    model.classifier[1] = nn.Linear(model.last_channel, 2) 
+    model.eval()
     return model
 
 model = load_model()
-class_names = ['Cat', 'Dog']
 
+# UI
 st.title("Cats vs Dogs Classifier")
-st.write("Upload an image to classify it as a cat or a dog.")
+st.write("Upload an image of a cat or dog and the model will predict it.")
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Uploaded Image', use_column_width=True)
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    img = image.resize((160, 160))
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    # Preprocess and predict
+    img_tensor = transform(image).unsqueeze(0)
+    with torch.no_grad():
+        output = model(img_tensor)
+        probs = torch.nn.functional.softmax(output[0], dim=0)
+        pred_class = torch.argmax(probs).item()
 
-    prediction = model.predict(img_array)
-    label = class_names[int(prediction[0] > 0)]
-
-    st.write(f"Prediction: {label}")
+    class_names = ["Cat", "Dog"]
+    st.write(f"Prediction: {class_names[pred_class]} ({probs[pred_class]:.2%})")
