@@ -20,8 +20,10 @@ def load_model():
 model = load_model()
 
 # UI
-st.title("Cats vs Dogs Classifier")
+st.title("Cats and Dogs Classifier")
 st.write("Upload an image of a cat or dog and the model will predict it.")
+st.write("Streamlit deployment for the cats and dogs classification activity")
+st.write("Santiago A01383419")
 
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
