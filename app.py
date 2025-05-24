@@ -39,4 +39,4 @@ if uploaded_file:
         pred_class = torch.argmax(probs).item()
 
     class_names = ["Cat", "Dog"]
-    st.write(f"Prediction: {class_names[pred_class]} ({probs[pred_class]:.2%})")
+    st.write(f"Prediction: {class_names[pred_class]}")
